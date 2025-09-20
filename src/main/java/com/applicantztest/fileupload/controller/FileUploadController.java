@@ -5,6 +5,10 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -141,6 +145,34 @@ public class FileUploadController {
     public ProcessingStat getStatistics() {
         logger.info("API request for processing statistics");
         return fileManageService.getProcessingStatistics();
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+        logger.info("Received download request for file ID: {}", id);
+
+        try {
+            Optional<FileManagement> fileManagement = repository.findById(id);
+            if (fileManagement.isEmpty()) {
+                logger.warn("File with ID {} not found", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            FileManagement file = fileManagement.get();
+            byte[] fileContent = file.getContent();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", file.getFilename());
+            headers.setContentLength(file.getFileSize());
+
+            logger.info("Successfully prepared file {} for download", file.getFilename());
+            return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Error downloading file with ID: {}", id, e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping("/delete/{id}")

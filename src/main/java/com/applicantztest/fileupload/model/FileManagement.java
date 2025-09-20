@@ -56,6 +56,9 @@ public class FileManagement {
     @Column(name = "error_message", length = 1000)
     private String errorMessage;
 
+    @Lob
+    @Column(name = "content")
+    private byte[] content;
 
     public FileManagement(String filename, String fileType, Long fileSize, Integer lineCount, Integer wordCount) {
         this.filename = filename;
@@ -63,7 +66,7 @@ public class FileManagement {
         this.fileSize = fileSize;
         this.lineCount = lineCount;
         this.wordCount = wordCount;
-        this.processedAt = LocalDateTime.now(); 
+        this.processedAt = LocalDateTime.now();
         this.status = ProcessingStatus.SUCCESS;
     }
 
@@ -74,8 +77,20 @@ public class FileManagement {
         this.lineCount = 0;
         this.wordCount = 0;
         this.errorMessage = errorMessage;
-        this.processedAt = LocalDateTime.now(); 
+        this.processedAt = LocalDateTime.now();
         this.status = ProcessingStatus.FAILED;
+    }
+
+    public FileManagement(String filename, String fileType, Long fileSize, Integer lineCount, Integer wordCount,
+            byte[] content) {
+        this.filename = filename;
+        this.fileType = fileType;
+        this.fileSize = fileSize;
+        this.lineCount = lineCount;
+        this.wordCount = wordCount;
+        this.content = content;
+        this.processedAt = LocalDateTime.now();
+        this.status = ProcessingStatus.SUCCESS;
     }
 
 }

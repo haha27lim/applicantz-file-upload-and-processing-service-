@@ -1,17 +1,16 @@
 package com.applicantztest.fileupload.service;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.applicantztest.fileupload.dto.ProcessingResult;
@@ -145,6 +144,8 @@ public class FileManageService {
                 filename, fileType, fileSize);
 
         try {
+            byte[] content = file.getBytes();
+
             // Process the file to get line and word counts
             ProcessingResult processingResult = processFile(file);
 
@@ -160,7 +161,7 @@ public class FileManageService {
                 // Create successful result
                 result = new FileManagement(filename, fileType, fileSize,
                         processingResult.getLineCount(),
-                        processingResult.getWordCount());
+                        processingResult.getWordCount(), content);
                 logger.info("File processing successful for: {}. Lines: {}, Words: {}",
                         filename, processingResult.getLineCount(), processingResult.getWordCount());
             }
@@ -184,6 +185,13 @@ public class FileManageService {
                 throw new RuntimeException("Failed to process file and save result", saveException);
             }
         }
+    }
+
+    public byte[] getFileContent(FileManagement file) throws IOException {
+        if (file.getContent() == null) {
+            throw new FileNotFoundException("File content not found for: " + file.getFilename());
+        }
+        return file.getContent();
     }
 
     public ProcessingStat getProcessingStatistics() {
