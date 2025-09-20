@@ -47,6 +47,11 @@ public interface FileManageRepo extends JpaRepository<FileManagement, Long> {
     @Query("SELECT f FROM FileManagement f WHERE f.wordCount > :wordCount AND f.status = 'SUCCESS'")
     List<FileManagement> findFilesWithWordCountGreaterThan(@Param("wordCount") Integer wordCount);
 
-    Optional<FileManagement> findByFilenameAndFileSizeAndStatus(String filename, long fileSize, ProcessingStatus status);
+    @Query("DELETE FROM FileManagement f WHERE f.processedAt < :date AND f.status = :status")
+    void deleteByProcessedAtBeforeAndStatus(@Param("date") LocalDateTime date,
+            @Param("status") ProcessingStatus status);
+
+    Optional<FileManagement> findByFilenameAndFileSizeAndStatus(String filename, long fileSize,
+            ProcessingStatus status);
 
 }
