@@ -4,19 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.applicantztest.fileupload.dto.ProcessingResult;
 import com.applicantztest.fileupload.dto.ProcessingStat;
 import com.applicantztest.fileupload.model.FileManagement;
 import com.applicantztest.fileupload.repository.FileManageRepo;
-
 
 @Service
 public class FileManageService {
@@ -25,13 +26,12 @@ public class FileManageService {
 
     private final FileManageRepo fileManageRepo;
 
-    private static final Pattern WORD_PATTERN = Pattern.compile("\\s+"); 
+    private static final Pattern WORD_PATTERN = Pattern.compile("\\s+");
 
     public FileManageService(FileManageRepo fileManageRepo) {
         this.fileManageRepo = fileManageRepo;
     }
 
-    
     public ProcessingResult processFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             logger.error("File processing failed: File is null or empty");
@@ -91,12 +91,27 @@ public class FileManageService {
         // Filter out empty strings
         int wordCount = 0;
         for (String word : words) {
-            if (!word.trim().isEmpty()) {
+            String trimmedWord = word.trim();
+
+            if (!trimmedWord.isEmpty() && !isSingleSymbol(trimmedWord)) {
                 wordCount++;
             }
         }
 
         return wordCount;
+    }
+
+    private boolean isSingleSymbol(String word) {
+        if (word.isEmpty()) {
+            return true;
+        }
+
+        for (char c : word.toCharArray()) {
+            if (Character.isLetterOrDigit(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public FileManagement saveToDatabase(FileManagement result) {
@@ -188,6 +203,33 @@ public class FileManageService {
         } catch (Exception exception) {
             logger.error("Error retrieving processing statistics", exception);
             return new ProcessingStat(0, 0, 0, 0, 0);
+        }
+    }
+
+    public boolean deleteFileFromDatabase(Long id) {
+        try {
+            if (!fileManageRepo.existsById(id)) {
+                logger.warn("File with id {} not found in database", id);
+                return false;
+            }
+
+            fileManageRepo.deleteById(id);
+            logger.info("Successfully deleted file with id {} from database", id);
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Error deleting file with id {} from database", id, e);
+            throw new RuntimeException("Failed to delete file from database", e);
+        }
+    }
+
+    public void deleteAll() {
+        try {
+            fileManageRepo.deleteAll();
+            logger.info("Successfully deleted all files from database");
+        } catch (Exception e) {
+            logger.error("Error deleting all files from database", e);
+            throw new RuntimeException("Failed to delete all files from database", e);
         }
     }
 }

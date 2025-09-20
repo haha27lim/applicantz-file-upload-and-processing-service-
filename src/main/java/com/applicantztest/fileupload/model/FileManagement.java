@@ -4,12 +4,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-
 
 @Data
 @NoArgsConstructor
@@ -58,13 +57,13 @@ public class FileManagement {
     private String errorMessage;
 
 
-
     public FileManagement(String filename, String fileType, Long fileSize, Integer lineCount, Integer wordCount) {
         this.filename = filename;
         this.fileType = fileType;
         this.fileSize = fileSize;
         this.lineCount = lineCount;
         this.wordCount = wordCount;
+        this.processedAt = LocalDateTime.now(); 
         this.status = ProcessingStatus.SUCCESS;
     }
 
@@ -75,6 +74,7 @@ public class FileManagement {
         this.lineCount = 0;
         this.wordCount = 0;
         this.errorMessage = errorMessage;
+        this.processedAt = LocalDateTime.now(); 
         this.status = ProcessingStatus.FAILED;
     }
 
